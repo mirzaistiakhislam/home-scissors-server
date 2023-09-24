@@ -24,6 +24,7 @@ async function run() {
         await client.connect();
 
         const packageCollections = client.db('home-scissors').collection('package-collections');
+        const bookingCollections = client.db('home-scissors').collection('booking-collections');
 
         app.get('/packages', async (req, res) => {
             const query = {};
@@ -36,7 +37,13 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await packageCollections.findOne(query);
             res.send(result);
-        })
+        });
+
+        app.post('/bookings', async (req, res) => {
+            const query = req.body;
+            const result = await bookingCollections.insertOne(query);
+            res.send(result);
+        });
 
 
         await client.db("admin").command({ ping: 1 });
