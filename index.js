@@ -32,6 +32,12 @@ async function run() {
             res.send(packages);
         });
 
+        app.get('/bookings', async (req, res) => {
+            const query = {};
+            const result = await bookingCollections.find(query).toArray();
+            res.send(result);
+        });
+
         app.get('/package/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
