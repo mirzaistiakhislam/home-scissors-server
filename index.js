@@ -2,11 +2,31 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
+// console.log(process.env.ACCESS_TOKEN);
+
 app.use(express.json());
 app.use(cors());
+
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+        return res.status(403).send({ error: 1, message: 'unauthorized access' });
+    }
+
+    const token = authorization.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN, (error, decoded) => {
+        if (error) {
+            return res.status(403).send({ error: 1, message: 'unauthorized access' });
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
 
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.iipillt.mongodb.net/?retryWrites=true&w=majority`;
@@ -32,8 +52,12 @@ async function run() {
             res.send(packages);
         });
 
-        app.get('/bookings', async (req, res) => {
-            console.log(req.query.email);
+        app.get('/bookings', verifyJWT, async (req, res) => {
+            // const decoded = req.decoded;
+            // if (req.query?.email !== decoded?.email) {
+            //     return res.status(401).send({ error: 1, message: 'forbidden access' });
+            // }
+
             let query = {};
             if (req.query?.email) {
                 query = {
@@ -50,6 +74,12 @@ async function run() {
             const result = await packageCollections.findOne(query);
             res.send(result);
         });
+
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
+            res.send({ token });
+        })
 
         app.post('/bookings', async (req, res) => {
             const query = req.body;
