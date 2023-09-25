@@ -6,8 +6,6 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// console.log(process.env.ACCESS_TOKEN);
-
 app.use(express.json());
 app.use(cors());
 
@@ -53,10 +51,12 @@ async function run() {
         });
 
         app.get('/bookings', verifyJWT, async (req, res) => {
-            // const decoded = req.decoded;
-            // if (req.query?.email !== decoded?.email) {
-            //     return res.status(401).send({ error: 1, message: 'forbidden access' });
-            // }
+
+            const decoded = req.decoded;
+
+            if (decoded.email !== req.query.email) {
+                return res.status(401).send({ error: 1, message: 'forbidden access' });
+            }
 
             let query = {};
             if (req.query?.email) {
